@@ -16,6 +16,10 @@ this limit is hit.
    Rigorlight can never eat into their budget.
 4. Optionally add an email alert at ~80% of the limit.
 
+**Simplest hard cap:** buy a small amount of prepaid credits (e.g. $10-20) and
+leave **auto-reload switched off**. When the credits run out, requests stop -
+nothing more can be charged.
+
 The exact menu names may change; look for "Workspaces", "Limits" and
 "Spend limit" in the Console settings.
 
