@@ -249,7 +249,8 @@ def _urls(alive, dead):
     (["verified"] * 10, [], Status.GREEN),
     (["verified"] * 9 + ["retracted"], [], Status.RED),
     (["verified"] * 8 + ["not_found", "mismatch"], [], Status.RED),
-    (["verified"] * 9 + ["not_found"], [], Status.YELLOW),
+    (["verified"] * 9 + ["not_found"], [], Status.RED),
+    (["verified"] * 9 + ["mismatch"], [], Status.RED),
     (["verified"] * 10, _urls(8, 2), Status.YELLOW),     # 20% dead
     (["verified"] * 10, _urls(10, 1), Status.GREEN),     # 9% dead
     (["verified"] * 4 + ["unverifiable"] * 6, [], Status.GREY),
@@ -279,8 +280,8 @@ def test_end_to_end_on_fixture(http):
     result = check_references(paper, http)
     labels = [r["label"] for r in result.stats["references"]]
     assert labels == ["verified", "mismatch", "verified", "unverifiable", "unverifiable"]
-    # one mismatch -> yellow; plus 1 of 1 URL dead
-    assert result.status == Status.YELLOW
+    # one mismatch -> red
+    assert result.status == Status.RED
     kinds = {e.label for e in result.evidence}
     assert {"mismatch", "dead_url"} <= kinds
     json.loads(result.to_json())
