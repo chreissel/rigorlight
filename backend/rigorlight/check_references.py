@@ -17,7 +17,7 @@ from rigorlight.checks.references import check_references
 from rigorlight.checks.result import CheckResult, Status
 from rigorlight.ingest import grobid
 from rigorlight.ingest.doi import looks_like_doi, paper_from_doi
-from rigorlight.net import DEFAULT_CACHE_DIR, Http, contact_email
+from rigorlight.net import DEFAULT_CACHE_DIR, Http, LookupFailed, contact_email
 
 
 def format_report(title: str, result: CheckResult) -> str:
@@ -65,7 +65,7 @@ def main(argv: list[str] | None = None) -> int:
                                    grobid_url=args.grobid_url)
         else:
             ap.error(f"{args.source!r} is neither an existing file nor a DOI")
-    except (grobid.GrobidError, ValueError) as e:
+    except (grobid.GrobidError, LookupFailed, ValueError) as e:
         print(f"Error: {e}", file=sys.stderr)
         return 2
 
