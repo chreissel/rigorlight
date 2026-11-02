@@ -26,6 +26,7 @@ def format_report(title: str, result: CheckResult) -> str:
         f"Paper: {title or '(untitled)'}",
         f"{Status(result.status).emoji} References: {result.status.value.upper()} - {result.summary}",
         f"   {s.get('total', 0)} references: {s.get('verified', 0)} verified, "
+        f"{s.get('discrepancy', 0)} with discrepancies, "
         f"{s.get('mismatch', 0)} mismatch, {s.get('not_found', 0)} not found, "
         f"{s.get('retracted', 0)} retracted, {s.get('unverifiable', 0)} unverifiable; "
         f"URLs: {s.get('urls_dead', 0)} dead of {s.get('urls_checked', 0)} checked",

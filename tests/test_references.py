@@ -25,8 +25,13 @@ def http(tmp_path):
 
 
 def crossref_msg(title, year, family, **extra):
+    families = family if isinstance(family, list) else [family]
     return {"message": {"title": [title], "issued": {"date-parts": [[year]]},
-                        "author": [{"family": family}], **extra}}
+                        "author": [{"family": f} for f in families], **extra}}
+
+
+DEEP_LEARNING = crossref_msg("Deep learning", 2015, ["LeCun", "Bengio", "Hinton"],
+                             **{"container-title": ["Nature"], "volume": "521", "page": "436-444"})
 
 
 NO_UPDATES = {"message": {"items": []}}
@@ -257,13 +262,13 @@ def test_verdict_rules(labels, urls, expected):
 @respx.mock
 def test_end_to_end_on_fixture(http):
     """Fixture: 1 verified DOI, 1 mismatched DOI, 1 found by title, 1 book, 1 dead URL."""
-    respx.get(f"{CR}/works/10.1038/nature14539").mock(return_value=httpx.Response(
-        200, json=crossref_msg("Deep learning", 2015, "LeCun")))
+    respx.get(f"{CR}/works/10.1038/nature14539").mock(return_value=httpx.Response(200, json=DEEP_LEARNING))
     respx.get(f"{CR}/works/10.1234/fake.5678").mock(return_value=httpx.Response(
         200, json=crossref_msg("Soil bacteria of the Atacama desert", 2003, "Garcia")))
     respx.get(f"{CR}/works").mock(return_value=httpx.Response(200, json=NO_UPDATES))
     respx.get(f"{OA}/works").mock(side_effect=lambda req: httpx.Response(200, json={"results": [
-        {"display_name": "Attention is All you Need", "publication_year": 2017}]
+        {"display_name": "Attention is All you Need", "publication_year": 2017,
+         "authorships": [{"author": {"display_name": "Ashish Vaswani"}}]}]
         if "Attention" in req.url.params["search"] else []}))
     respx.head("https://example.org/dataset").mock(return_value=httpx.Response(404))
     respx.get("https://example.org/dataset").mock(return_value=httpx.Response(404))
@@ -285,3 +290,61 @@ def test_no_anthropic_in_reference_checker():
     pkg = Path(R.__file__).parents[1]
     for f in ["checks/references.py", "ingest/grobid.py", "ingest/doi.py", "net.py", "check_references.py"]:
         assert "anthropic" not in (pkg / f).read_text()
+
+
+# -- strict matching: exact title + authors / journal / year / volume / pages -----------
+def test_norm_ignores_case_punctuation_accents_and_tags():
+    assert R.norm("Schrödinger's <i>Cat</i>: a  Study.") == R.norm("schrodinger s cat a study")
+
+
+@pytest.mark.parametrize("ref,label,field", [
+    (Reference(title="Deep learning", authors=["LeCun, Y", "Bengio, Y"], venue="Nature", year=2015,
+               volume="521", first_page="436"), "verified", None),
+    (Reference(title="Deep learning.", authors=["LeCun, Y"], venue="Nature"), "verified", None),
+    (Reference(title="Deep learning methods", authors=["LeCun, Y"]), "discrepancy", "title"),
+    (Reference(title="Deep learning", authors=["LeCun, Y", "Smith, J"]), "discrepancy", "authors"),
+    (Reference(title="Deep learning", authors=["Bengio, Y", "LeCun, Y"]), "discrepancy", "authors"),
+    (Reference(title="Deep learning", venue="Science"), "discrepancy", "journal"),
+    (Reference(title="Deep learning", year=2012), "discrepancy", "year"),
+    (Reference(title="Deep learning", volume="512"), "discrepancy", "volume"),
+    (Reference(title="Deep learning", first_page="999"), "discrepancy", "first_page"),
+])
+@respx.mock
+def test_doi_field_comparison(http, ref, label, field):
+    respx.get(f"{CR}/works/10.1038/nature14539").mock(return_value=httpx.Response(200, json=DEEP_LEARNING))
+    respx.get(f"{CR}/works").mock(return_value=httpx.Response(200, json=NO_UPDATES))
+    ref.doi = "10.1038/nature14539"
+    rc = R.check_reference(1, ref, http)
+    assert rc.label == label, rc.reason
+    differs = [f["field"] for f in rc.fields if f["status"] == "differs"]
+    assert differs == ([field] if field else [])
+
+
+def test_journal_abbreviations_match():
+    full = ["Physical Review Letters"]
+    assert R._venue_matches("Phys. Rev. Lett.", full)
+    assert R._venue_matches("Physical review letters", full)
+    assert not R._venue_matches("Phys. Rev. D", full)
+
+
+@respx.mock
+def test_title_search_near_match_is_discrepancy(http):
+    respx.get(f"{OA}/works").mock(return_value=httpx.Response(200, json={"results": [
+        {"display_name": "Attention is all you need", "publication_year": 2017,
+         "authorships": [{"author": {"display_name": "Ashish Vaswani"}}]}]}))
+    rc = R.check_reference(1, Reference(title="Attention is all you needed", authors=["Vaswani, A"]), http)
+    assert rc.label == "discrepancy" and rc.fields[0]["field"] == "title"
+
+
+@respx.mock
+def test_same_title_other_authors_and_year_is_not_found(http):
+    respx.get(f"{OA}/works").mock(return_value=httpx.Response(200, json={"results": [
+        {"display_name": "Attention is all you need", "publication_year": 2017,
+         "authorships": [{"author": {"display_name": "Ashish Vaswani"}}]}]}))
+    rc = R.check_reference(1, Reference(title="Attention is all you need", authors=["Smith, J"], year=2023), http)
+    assert rc.label == "not_found" and "different authors" in rc.reason
+
+
+def test_verdict_discrepancy_fraction():
+    assert verdict([_rc("verified")] * 9 + [_rc("discrepancy")], [])[0] == Status.GREEN   # 10%
+    assert verdict([_rc("verified")] * 8 + [_rc("discrepancy")] * 2, [])[0] == Status.YELLOW

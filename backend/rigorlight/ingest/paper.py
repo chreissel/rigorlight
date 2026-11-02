@@ -13,6 +13,8 @@ class Reference:
     doi: str | None = None        # normalised, lower-case, no https://doi.org/ prefix
     urls: list[str] = field(default_factory=list)
     venue: str = ""               # journal / book / proceedings title
+    volume: str | None = None
+    first_page: str | None = None
     kind: str = "article"         # article | book | web | other
 
 

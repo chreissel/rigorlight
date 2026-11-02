@@ -82,6 +82,8 @@ def _crossref_ref(item: dict) -> Reference:
         doi=normalize_doi(item.get("DOI")),
         urls=urls,
         venue=venue,
+        volume=str(item["volume"]) if item.get("volume") else None,
+        first_page=str(item["first-page"]) if item.get("first-page") else None,
         kind=kind,
     )
 

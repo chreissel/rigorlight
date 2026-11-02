@@ -87,6 +87,9 @@ def _parse_bibl(bs: ET.Element) -> Reference:
     urls += URL_RE.findall(raw)
     urls = list(dict.fromkeys(u.rstrip(".,;)") for u in urls))
     date = bs.find(".//tei:imprint/tei:date", NS)
+    vol = bs.find(".//tei:imprint/tei:biblScope[@unit='volume']", NS)
+    page = bs.find(".//tei:imprint/tei:biblScope[@unit='page']", NS)
+    first_page = (page.get("from") or _text(page).split("-")[0].strip()) if page is not None else ""
 
     if a_title:
         title, venue, kind = a_title, m_title, "article"
@@ -105,6 +108,8 @@ def _parse_bibl(bs: ET.Element) -> Reference:
         doi=doi or None,
         urls=urls,
         venue=venue,
+        volume=_text(vol) or None,
+        first_page=first_page or None,
         kind=kind,
     )
 
