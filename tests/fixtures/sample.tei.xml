@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <teiHeader xml:lang="en">
+    <fileDesc>
+      <titleStmt>
+        <title level="a" type="main">A Small Test Paper About Neural Networks</title>
+      </titleStmt>
+      <sourceDesc>
+        <biblStruct>
+          <analytic><title level="a" type="main">A Small Test Paper About Neural Networks</title></analytic>
+          <monogr><imprint/></monogr>
+          <idno type="DOI">10.9999/TEST.2024.001</idno>
+        </biblStruct>
+      </sourceDesc>
+    </fileDesc>
+    <profileDesc>
+      <abstract>
+        <div><p>We study neural networks.   This is a fixture.</p></div>
+      </abstract>
+    </profileDesc>
+  </teiHeader>
+  <text>
+    <body><div><p>Body text.</p></div></body>
+    <back>
+      <div type="references">
+        <listBibl>
+          <biblStruct xml:id="b0">
+            <analytic>
+              <title level="a" type="main">Deep learning</title>
+              <author><persName><forename type="first">Yann</forename><surname>LeCun</surname></persName></author>
+              <author><persName><forename type="first">Yoshua</forename><surname>Bengio</surname></persName></author>
+            </analytic>
+            <monogr>
+              <title level="j">Nature</title>
+              <imprint><biblScope unit="volume">521</biblScope><date type="published" when="2015-05-27"/></imprint>
+            </monogr>
+            <idno type="DOI">10.1038/nature14539</idno>
+            <note type="raw_reference">LeCun Y, Bengio Y, Hinton G. Deep learning. Nature 521, 436-444 (2015).</note>
+          </biblStruct>
+          <biblStruct xml:id="b1">
+            <analytic>
+              <title level="a" type="main">Quantum gravity in a teacup</title>
+              <author><persName><forename type="first">A</forename><surname>Nobody</surname></persName></author>
+            </analytic>
+            <monogr>
+              <title level="j">Journal of Imaginary Results</title>
+              <imprint><date type="published" when="2021"/></imprint>
+            </monogr>
+            <idno type="DOI">10.1234/fake.5678</idno>
+            <note type="raw_reference">Nobody A. Quantum gravity in a teacup. J Imag Res (2021). doi:10.1234/fake.5678</note>
+          </biblStruct>
+          <biblStruct xml:id="b2">
+            <analytic>
+              <title level="a" type="main">Attention is all you need</title>
+              <author><persName><forename type="first">Ashish</forename><surname>Vaswani</surname></persName></author>
+            </analytic>
+            <monogr>
+              <title level="m">Advances in Neural Information Processing Systems</title>
+              <imprint><date type="published" when="2017"/></imprint>
+            </monogr>
+            <note type="raw_reference">Vaswani A, et al. Attention is all you need. NeurIPS 2017.</note>
+          </biblStruct>
+          <biblStruct xml:id="b3">
+            <monogr>
+              <title level="m" type="main">Pattern Recognition and Machine Learning</title>
+              <author><persName><forename type="first">Christopher</forename><surname>Bishop</surname></persName></author>
+              <imprint><publisher>Springer</publisher><date type="published" when="2006"/></imprint>
+            </monogr>
+            <note type="raw_reference">Bishop CM. Pattern Recognition and Machine Learning. Springer, 2006.</note>
+          </biblStruct>
+          <biblStruct xml:id="b4">
+            <monogr>
+              <title/>
+              <imprint/>
+            </monogr>
+            <ptr target="https://example.org/dataset"/>
+            <note type="raw_reference">Example dataset. https://example.org/dataset (accessed 2024).</note>
+          </biblStruct>
+        </listBibl>
+      </div>
+    </back>
+  </text>
+</TEI>
