@@ -348,3 +348,10 @@ def test_same_title_other_authors_and_year_is_not_found(http):
 def test_verdict_discrepancy_fraction():
     assert verdict([_rc("verified")] * 9 + [_rc("discrepancy")], [])[0] == Status.GREEN   # 10%
     assert verdict([_rc("verified")] * 8 + [_rc("discrepancy")] * 2, [])[0] == Status.YELLOW
+
+
+def test_verdict_any_author_discrepancy_is_yellow():
+    wrong_authors = _rc("discrepancy")
+    wrong_authors.fields = [{"field": "authors", "status": "differs", "cited": "Smith", "found": "Jones"}]
+    status, summary = verdict([_rc("verified")] * 49 + [wrong_authors], [])   # 2%, still yellow
+    assert status == Status.YELLOW and "authors" in summary

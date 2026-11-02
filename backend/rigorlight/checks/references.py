@@ -18,7 +18,8 @@ Traffic light (thresholds below, applied in this order)
 -------------------------------------------------------
 red     any retracted reference, or >= RED_MIN_BAD not_found/mismatch
         (several unfindable or wrong references are a strong sign of fabricated citations)
-yellow  exactly one not_found/mismatch, > YELLOW_DISCREPANCY_FRACTION of references with
+yellow  exactly one not_found/mismatch, any reference whose author list differs from the
+        published record, > YELLOW_DISCREPANCY_FRACTION of references with other
         discrepancies, or > YELLOW_DEAD_URL_FRACTION of cited URLs dead
 grey    no references, or > GREY_UNVERIFIABLE_FRACTION of references unverifiable
 green   otherwise
@@ -44,6 +45,7 @@ RED_MIN_BAD = 2                    # >= this many not_found + mismatch -> red
 YELLOW_DEAD_URL_FRACTION = 0.10    # > 10% of checked URLs dead -> yellow
 GREY_UNVERIFIABLE_FRACTION = 0.50  # > 50% of references unverifiable -> grey
 YELLOW_DISCREPANCY_FRACTION = 0.10  # > 10% of references with metadata discrepancies -> yellow
+YELLOW_ANY_AUTHOR_DIFF = True      # a single reference with wrong/missing authors -> yellow
 TITLE_EXACT = 100                  # title must match 100% (after normalising case, punctuation,
                                    # accents, HTML tags) to count as verified
 TITLE_MISMATCH = 60                # below this the DOI points to a different paper
@@ -453,6 +455,10 @@ def _describe(ref: Reference) -> str:
     return f"{s} \"{title[:120]}\"".strip() + (f" doi:{ref.doi}" if ref.doi else "")
 
 
+def _field_differs(r: RefCheck, name: str) -> bool:
+    return any(f["field"] == name and f["status"] == "differs" for f in r.fields)
+
+
 def verdict(results: list[RefCheck], url_checks: list[UrlCheck]) -> tuple[Status, str]:
     n = len(results)
     if n == 0:
@@ -471,10 +477,16 @@ def verdict(results: list[RefCheck], url_checks: list[UrlCheck]) -> tuple[Status
             parts.append(f"{bad} not found or mismatched")
         return Status.RED, f"{' and '.join(parts)} out of {n} references."
     disc_frac = count[DISCREPANCY] / n
-    if bad == 1 or dead_frac > YELLOW_DEAD_URL_FRACTION or disc_frac > YELLOW_DISCREPANCY_FRACTION:
+    author_diff = [r for r in results if r.label == DISCREPANCY and _field_differs(r, "authors")]
+    if (bad == 1 or dead_frac > YELLOW_DEAD_URL_FRACTION or disc_frac > YELLOW_DISCREPANCY_FRACTION
+            or (YELLOW_ANY_AUTHOR_DIFF and author_diff)):
         parts = []
         if bad:
             parts.append("1 reference could not be found or does not match its DOI")
+        if YELLOW_ANY_AUTHOR_DIFF and author_diff:
+            k = len(author_diff)
+            parts.append(f"{k} reference{'s' if k > 1 else ''} cite{'' if k > 1 else 's'} "
+                         "authors that differ from the published record")
         if disc_frac > YELLOW_DISCREPANCY_FRACTION:
             k = count[DISCREPANCY]
             parts.append(f"{k} reference{'s have' if k > 1 else ' has'} details (title, authors, "
