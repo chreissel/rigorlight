@@ -21,7 +21,7 @@ reviewers. Results are flags for human review, not verdicts.
 
 ## Status
 
-Early development. Currently in place: project structure and a hard monthly
+Early development — see [ROADMAP.md](ROADMAP.md) for progress. Currently in place: project structure and a hard monthly
 spending cap for all LLM calls.
 
 ## Getting started
