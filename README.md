@@ -21,8 +21,15 @@ reviewers. Results are flags for human review, not verdicts.
 
 ## Status
 
-Early development. Currently in place: project structure and a hard monthly
-spending cap for all LLM calls.
+Early development. Currently in place:
+
+- a hard monthly spending cap for all LLM calls;
+- **reference checker** (no LLM calls, free services only): parses PDFs with
+  GROBID or takes a DOI (Crossref reference list, or an open-access PDF), then
+  verifies each reference via Crossref / OpenAlex / doi.org (Semantic Scholar
+  if `S2_API_KEY` is set), flags retractions, and checks cited URLs (with
+  Wayback Machine fallback). Traffic-light rules are documented at the top of
+  `backend/rigorlight/checks/references.py`.
 
 ## Getting started
 
@@ -32,6 +39,16 @@ python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 pytest
 docker compose up -d grobid   # PDF parser on http://localhost:8070
+```
+
+Check a paper's references (set `CONTACT_EMAIL` for the Crossref/OpenAlex
+polite pools; API responses are cached in `data/cache/`):
+
+```bash
+export CONTACT_EMAIL=you@example.org
+python -m rigorlight.check_references paper.pdf          # needs GROBID
+python -m rigorlight.check_references 10.1038/nature14539
+python -m rigorlight.check_references 10.1038/nature14539 --json
 ```
 
 ## Costs
